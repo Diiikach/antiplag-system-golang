@@ -1,0 +1,30 @@
+version: '3.9'
+
+services:
+  gateway:
+    build: ./gateway
+    ports:
+      - "8000:8000"
+    depends_on:
+      - file_storing
+      - file_analysis
+      - qdrant
+  file_storing:
+    build: ./file_storing
+    volumes:
+      - file_storage:/files
+  file_analysis:
+    build: ./file_analysis
+    depends_on:
+      - qdrant
+    volumes:
+      - file_storage:/files
+  qdrant:
+    image: qdrant/qdrant:latest
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant_data:/qdrant/storage
+volumes:
+  file_storage:
+  qdrant_data:

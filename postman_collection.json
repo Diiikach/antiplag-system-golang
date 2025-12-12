@@ -1,0 +1,44 @@
+{
+  "info": {
+    "name": "Antiplagiarism Microservices",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Submit Work",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            { "key": "file", "type": "file", "src": "" },
+            { "key": "sender", "value": "Ivanov Ivan", "type": "text" },
+            { "key": "work_id", "value": "hw1", "type": "text" }
+          ]
+        },
+        "url": {
+          "raw": "http://localhost:8000/api/submit",
+          "protocol": "http",
+          "host": [ "localhost" ],
+          "port": "8000",
+          "path": [ "api", "submit" ]
+        }
+      }
+    },
+    {
+      "name": "Get Reports",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8000/api/works/hw1/reports",
+          "protocol": "http",
+          "host": [ "localhost" ],
+          "port": "8000",
+          "path": [ "api", "works", "hw1", "reports" ]
+        }
+      }
+    }
+  ]
+}

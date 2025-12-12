@@ -25,6 +25,11 @@ services:
       - "6333:6333"
     volumes:
       - qdrant_data:/qdrant/storage
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:6333/collections"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
 volumes:
   file_storage:
   qdrant_data:

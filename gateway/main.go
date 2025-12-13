@@ -1,13 +1,15 @@
 package main
+
 import (
 	"bytes"
 	"encoding/json"
 	"io"
+	"log"
 	"mime/multipart"
 	"net/http"
-	"path/filepath"
-	"log"
+	"strings"
 )
+
 func main() {
 	fileStoringURL := "http://file_storing:8001"
 	fileAnalysisURL := "http://file_analysis:8002"
@@ -53,7 +55,7 @@ func main() {
 			w.WriteHeader(http.StatusMethodNotAllowed)
 			return
 		}
-		parts := filepath.SplitList(r.URL.Path)
+		parts := strings.Split(r.URL.Path, "/")
 		workid := parts[len(parts)-2]
 		url := fileAnalysisURL + "/reports/" + workid
 		resp, err := http.Get(url)

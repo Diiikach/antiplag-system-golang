@@ -119,6 +119,7 @@ func handleAnalyze(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Store document in Qdrant
+	_, err = storeDocument(req.Sender, req.WorkID, req.FileName, vector)
 	if err != nil {
 		log.Printf("Error storing document: %v", err)
 		http.Error(w, "Failed to store document", http.StatusInternalServerError)
@@ -532,7 +533,10 @@ func handleGetReports(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(reports) == 0 {
-		http.Error(w, "No reports found", http.StatusNotFound)
+		// Return empty array instead of error
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode([]Report{})
 		return
 	}
 

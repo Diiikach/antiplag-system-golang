@@ -1,44 +1,266 @@
 {
   "info": {
     "name": "Antiplagiarism Microservices",
+    "description": "Complete API collection for antiplagiarism microservices. Submit work files and get plagiarism analysis reports.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "noauth"
   },
   "item": [
     {
-      "name": "Submit Work",
-      "request": {
-        "method": "POST",
-        "header": [],
-        "body": {
-          "mode": "formdata",
-          "formdata": [
-            { "key": "file", "type": "file", "src": "" },
-            { "key": "sender", "value": "Ivanov Ivan", "type": "text" },
-            { "key": "work_id", "value": "hw1", "type": "text" }
-          ]
-        },
-        "url": {
-          "raw": "http://localhost:8000/api/submit",
-          "protocol": "http",
-          "host": [ "localhost" ],
-          "port": "8000",
-          "path": [ "api", "submit" ]
-        }
-      }
-    },
-    {
-      "name": "Get Reports",
+      "name": "Health Check",
       "request": {
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "http://localhost:8000/api/works/hw1/reports",
+          "raw": "http://localhost:8000",
           "protocol": "http",
-          "host": [ "localhost" ],
-          "port": "8000",
-          "path": [ "api", "works", "hw1", "reports" ]
+          "host": [
+            "localhost"
+          ],
+          "port": "8000"
         }
-      }
+      },
+      "description": "Check if the gateway is running"
+    },
+    {
+      "name": "Submit Work Requests",
+      "description": "Submit work files for plagiarism analysis",
+      "item": [
+        {
+          "name": "Submit Work (Ivanov - Original)",
+          "description": "Submit the first work by Ivanov. This will be the reference point for plagiarism detection.",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": null
+                },
+                {
+                  "key": "sender",
+                  "value": "Ivanov Ivan",
+                  "type": "text"
+                },
+                {
+                  "key": "work_id",
+                  "value": "hw1",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "http://localhost:8000/api/submit",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "submit"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Submit Work (Petrov - Similar)",
+          "description": "Submit a similar work by Petrov. Should trigger plagiarism flag.",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": null
+                },
+                {
+                  "key": "sender",
+                  "value": "Petrov Petr",
+                  "type": "text"
+                },
+                {
+                  "key": "work_id",
+                  "value": "hw1",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "http://localhost:8000/api/submit",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "submit"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Submit Work (Sidorov - Different)",
+          "description": "Submit a different work by Sidorov. Should not trigger plagiarism flag.",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": null
+                },
+                {
+                  "key": "sender",
+                  "value": "Sidorov Sergey",
+                  "type": "text"
+                },
+                {
+                  "key": "work_id",
+                  "value": "hw1",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "http://localhost:8000/api/submit",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "submit"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Submit Work (hw2 Assignment)",
+          "description": "Submit work for a different assignment (hw2)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": null
+                },
+                {
+                  "key": "sender",
+                  "value": "Student Name",
+                  "type": "text"
+                },
+                {
+                  "key": "work_id",
+                  "value": "hw2",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "http://localhost:8000/api/submit",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "submit"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Get Reports",
+      "description": "Retrieve plagiarism analysis reports",
+      "item": [
+        {
+          "name": "Get Reports for hw1",
+          "description": "Retrieve all plagiarism reports for homework 1. Shows all submissions with plagiarism flags and similarity scores.",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8000/api/works/hw1/reports",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "works",
+                "hw1",
+                "reports"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Reports for hw2",
+          "description": "Retrieve all plagiarism reports for homework 2",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8000/api/works/hw2/reports",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "works",
+                "hw2",
+                "reports"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Reports for hw3",
+          "description": "Retrieve all plagiarism reports for homework 3",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8000/api/works/hw3/reports",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "works",
+                "hw3",
+                "reports"
+              ]
+            }
+          }
+        }
+      ]
     }
   ]
 }

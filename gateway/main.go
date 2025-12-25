@@ -18,17 +18,18 @@ func main() {
 	fileStoringURL := getEnv("FILE_STORING_URL", "http://file_storing:8001")
 	fileAnalysisURL := getEnv("FILE_ANALYSIS_URL", "http://file_analysis:8002")
 
+	mux := http.NewServeMux()
+	mux.HandleFunc("/api/submit", handleSubmit(fileStoringURL, fileAnalysisURL))
+	mux.HandleFunc("/api/works/", handleReports(fileAnalysisURL))
+	mux.HandleFunc("/health", handleGatewayHealth)
+
 	server := &http.Server{
 		Addr:         ":8000",
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 30 * time.Second,
 		IdleTimeout:  60 * time.Second,
-		Handler:      http.DefaultServeMux,
+		Handler:      corsMiddleware(mux),
 	}
-
-	http.HandleFunc("/api/submit", handleSubmit(fileStoringURL, fileAnalysisURL))
-	http.HandleFunc("/api/works/", handleReports(fileAnalysisURL))
-	http.HandleFunc("/health", handleGatewayHealth)
 
 	log.Println("gateway running at :8000")
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {

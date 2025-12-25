@@ -1,6 +1,12 @@
 version: '3.9'
 
 services:
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - gateway
   gateway:
     build: ./gateway
     ports:
@@ -13,10 +19,20 @@ services:
     build: ./file_storing
     volumes:
       - file_storage:/files
+  embeddings:
+    build: ./embeddings
+    ports:
+      - "8003:8003"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8003/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
   file_analysis:
     build: ./file_analysis
     depends_on:
       - qdrant
+      - embeddings
     volumes:
       - file_storage:/files
   qdrant:

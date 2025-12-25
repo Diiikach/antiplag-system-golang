@@ -1,33 +1,83 @@
 package main
 
 import (
-	"crypto/sha1"
-	"math"
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"time"
 )
 
+// Локальный микросервис embeddings генерирует 384-мерные эмбединги
+// через sentence-transformers/all-MiniLM-L6-v2
+const embeddingsServiceURL = "http://embeddings:8003"
+
 func generateVector(text string) ([]float32, error) {
-	h := sha1.Sum([]byte(text))
-	vector := make([]float32, 384)
+	url := embeddingsServiceURL + "/embed"
 
-	for i := 0; i < 384; i++ {
-		hashIndex := i % len(h)
-		vector[i] = float32(h[hashIndex]) / 255.0
-
-		if i%2 == 0 {
-			vector[i] = (vector[i] + float32(i%10)/10.0) / 2.0
-		}
+	payload := map[string]interface{}{
+		"text": text,
 	}
 
-	var sumSq float64
-	for _, v := range vector {
-		sumSq += float64(v * v)
+	jsonData, err := json.Marshal(payload)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	if sumSq > 0 {
-		norm := float32(math.Sqrt(sumSq))
-		for i := range vector {
-			vector[i] /= norm
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{Timeout: 60 * time.Second}
+
+	var resp *http.Response
+	maxRetries := 3
+	var lastErr error
+
+	for attempt := 0; attempt < maxRetries; attempt++ {
+		resp, err = client.Do(req)
+		if err == nil {
+			break
 		}
+		lastErr = err
+		time.Sleep(time.Duration(attempt+1) * time.Second)
+	}
+
+	if err != nil {
+		return nil, fmt.Errorf("request to embeddings service failed after %d attempts: %w", maxRetries, lastErr)
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response: %w", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("embeddings service error [%d]: %s", resp.StatusCode, string(body))
+	}
+
+	// Парсим ответ: {"embedding": [0.1, 0.2, ..., 0.3]}
+	var result struct {
+		Embedding []float64 `json:"embedding"`
+	}
+
+	if err := json.Unmarshal(body, &result); err != nil {
+		return nil, fmt.Errorf("failed to parse embedding response: %w", err)
+	}
+
+	if len(result.Embedding) != 384 {
+		return nil, fmt.Errorf("unexpected embedding dimension: got %d, expected 384", len(result.Embedding))
+	}
+
+	// Конвертируем в float32
+	vector := make([]float32, len(result.Embedding))
+	for i, v := range result.Embedding {
+		vector[i] = float32(v)
 	}
 
 	return vector, nil

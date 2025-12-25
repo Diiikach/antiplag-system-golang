@@ -7,7 +7,9 @@
 ## Стек технологий
 
 - Go 1.21, Docker, docker-compose, HTTP/REST
+- Python 3.11, Flask (микросервис embeddings)
 - Qdrant (векторная БД)
+- sentence-transformers/all-MiniLM-L6-v2 (локальная нейросетевая модель)
 - QuickChart API (генерация облаков слов)
 
 ---
@@ -16,14 +18,16 @@
 
 **Компоненты:**
 
-1. **API Gateway** (порт 8000) — маршрутизация запросов
-2. **File Storing** (порт 8001) — хранение файлов в `/files`
-3. **File Analysis** (порт 8002) — анализ, векторизация, поиск плагиата
-4. **Qdrant** (порт 6333) — базаданные с векторами (384-мерные)
+1. **Frontend** (порт 3000) — веб-интерфейс для загрузки и просмотра отчётов
+2. **API Gateway** (порт 8000) — маршрутизация запросов
+3. **File Storing** (порт 8001) — хранение файлов в `/files`
+4. **Embeddings** (порт 8003) — локальный сервис для генерации эмбедингов
+5. **File Analysis** (порт 8002) — анализ, поиск плагиата
+6. **Qdrant** (порт 6333) — базаданные с векторами (384-мерные)
 
 **Поток данных:**
 ```
-Клиент → Gateway → File Storing + File Analysis → Qdrant
+Пользователь → Frontend → Gateway → File Storing + File Analysis → Embeddings → Qdrant
 ```
 
 ---
@@ -31,6 +35,10 @@
 ## Структура кода
 
 Каждый микросервис разбит на модули (< 200 строк):
+
+**frontend/**
+- index.html (220 строк) — веб-интерфейс
+- nginx.conf — конфигурация сервера
 
 **gateway/**
 - main.go (37 строк) — инициализация сервера
@@ -44,11 +52,15 @@
 **file_analysis/**
 - main.go (54 строки) — инициализация сервера
 - handlers.go (164 строки) — /analyze, /reports/, /health
-- vector.go (34 строки) — генерация 384-мерного вектора (SHA-1)
+- vector.go (70 строк) — вызов локального embeddings сервиса
 - plagiarism.go (189 строк) — сохранение/поиск в Qdrant
 - qdrant.go (90 строк) — инициализация коллекции
 - report.go (41 строка) — формирование JSON-отчётов
 - wordcloud.go (106 строк) — генерация PNG облаков слов (QuickChart API)
+
+**embeddings/** (Python)
+- app.py (60 строк) — Flask микросервис
+- requirements.txt — зависимости
 
 ---
 
@@ -62,12 +74,13 @@
 6. Отчёт сохраняется в `/files/reports/{work_id}/`
 7. Ответ клиенту: PNG облако слов + JSON с similarity
 
----
-
-## Быстрый старт
+```bash
+### Запуск
 
 ```bash
-docker-compose up --build
+export HUGGINGFACE_API_KEY=hf_ваш_токен
+do**Frontend доступен по http://localhost:3000** ← откройте в браузере
+- Gateway API:uild
 ```
 
 После старта:

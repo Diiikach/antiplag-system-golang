@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Антиплагиат — Проверка работ</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+        input[type="text"],
+        input[type="file"],
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 14px 32px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 8px;
+            display: none;
+        }
+        .result.success {
+            background: #d4edda;
+            border: 2px solid #c3e6cb;
+            color: #155724;
+        }
+        .result.error {
+            background: #f8d7da;
+            border: 2px solid #f5c6cb;
+            color: #721c24;
+        }
+        .wordcloud {
+            max-width: 100%;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        .report-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+        .report-item.plagiarized {
+            border-left-color: #dc3545;
+            background: #fff5f5;
+        }
+        .report-meta {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .badge.ok { background: #d4edda; color: #155724; }
+        .badge.plagiarized { background: #f8d7da; color: #721c24; }
+        .similarity {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .loader {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        .loader.active { display: block; }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Антиплагиат</h1>
+        
+        <div class="card">
+            <h2>📤 Загрузка работы</h2>
+            <form id="uploadForm">
+                <div class="form-group">
+                    <label for="sender">ФИО студента</label>
+                    <input type="text" id="sender" required placeholder="Иванов Иван Иванович">
+                </div>
+                <div class="form-group">
+                    <label for="workId">ID задания</label>
+                    <input type="text" id="workId" required placeholder="hw1" value="hw1">
+                </div>
+                <div class="form-group">
+                    <label for="file">Файл работы</label>
+                    <input type="file" id="file" required accept=".txt,.pdf,.doc,.docx">
+                </div>
+                <button type="submit" id="submitBtn">Проверить работу</button>
+            </form>
+            
+            <div class="loader" id="uploadLoader">
+                <div class="spinner"></div>
+                <p>Анализируем работу...</p>
+            </div>
+            
+            <div class="result" id="uploadResult"></div>
+        </div>
+
+        <div class="card">
+            <h2>📊 Просмотр отчётов</h2>
+            <form id="reportsForm">
+                <div class="form-group">
+                    <label for="reportWorkId">ID задания</label>
+                    <input type="text" id="reportWorkId" required placeholder="hw1" value="hw1">
+                </div>
+                <button type="submit">Загрузить отчёты</button>
+            </form>
+            
+            <div class="loader" id="reportsLoader">
+                <div class="spinner"></div>
+                <p>Загружаем отчёты...</p>
+            </div>
+            
+            <div id="reportsList"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+
+        // Загрузка работы
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const sender = document.getElementById('sender').value;
+            const workId = document.getElementById('workId').value;
+            const file = document.getElementById('file').files[0];
+            
+            const submitBtn = document.getElementById('submitBtn');
+            const loader = document.getElementById('uploadLoader');
+            const resultDiv = document.getElementById('uploadResult');
+            
+            submitBtn.disabled = true;
+            loader.classList.add('active');
+            resultDiv.style.display = 'none';
+            
+            const formData = new FormData();
+            formData.append('sender', sender);
+            formData.append('work_id', workId);
+            formData.append('file', file);
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/submit`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const imgUrl = URL.createObjectURL(blob);
+                    
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `
+                        <strong>✅ Работа проверена!</strong>
+                        <p>Облако слов:</p>
+                        <img src="${imgUrl}" class="wordcloud" alt="Word Cloud">
+                    `;
+                } else {
+                    const error = await response.text();
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `<strong>❌ Ошибка:</strong> ${error}`;
+                }
+                
+                resultDiv.style.display = 'block';
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `<strong>❌ Ошибка сети:</strong> ${error.message}`;
+                resultDiv.style.display = 'block';
+            } finally {
+                submitBtn.disabled = false;
+                loader.classList.remove('active');
+            }
+        });
+
+        // Загрузка отчётов
+        document.getElementById('reportsForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const workId = document.getElementById('reportWorkId').value;
+            const loader = document.getElementById('reportsLoader');
+            const listDiv = document.getElementById('reportsList');
+            
+            loader.classList.add('active');
+            listDiv.innerHTML = '';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/works/${workId}/reports`);
+                
+                if (response.ok) {
+                    const reports = await response.json();
+                    
+                    if (reports.length === 0) {
+                        listDiv.innerHTML = '<p style="text-align: center; color: #999; padding: 20px;">Отчётов пока нет</p>';
+                    } else {
+                        reports.forEach(report => {
+                            const div = document.createElement('div');
+                            div.className = `report-item ${report.plagiarized ? 'plagiarized' : ''}`;
+                            div.innerHTML = `
+                                <div class="report-meta">
+                                    <div>
+                                        <strong>${report.sender}</strong><br>
+                                        <small>${report.file_name}</small>
+                                    </div>
+                                    <div style="text-align: right;">
+                                        <span class="badge ${report.plagiarized ? 'plagiarized' : 'ok'}">
+                                            ${report.plagiarized ? '⚠️ Плагиат' : '✅ OK'}
+                                        </span><br>
+                                        <span class="similarity">${(report.similarity * 100).toFixed(1)}%</span>
+                                    </div>
+                                </div>
+                                <small style="color: #666;">${new Date(report.timestamp).toLocaleString('ru-RU')}</small>
+                            `;
+                            listDiv.appendChild(div);
+                        });
+                    }
+                } else {
+                    const error = await response.text();
+                    listDiv.innerHTML = `<p class="result error" style="display: block;">❌ ${error}</p>`;
+                }
+            } catch (error) {
+                listDiv.innerHTML = `<p class="result error" style="display: block;">❌ Ошибка сети: ${error.message}</p>`;
+            } finally {
+                loader.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html>
